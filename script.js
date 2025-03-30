@@ -8,6 +8,8 @@ function visaTid() {
     fetch("https://prinsessa.husbil.org/gasdata")
       .then(res => res.json())
       .then(data => {
+        console.log("Hämtad gasdata:", data);  // Lägg till detta för att kolla på datan
+  
         const labels = data.map(p => new Date(p.time).toLocaleTimeString());
         const values = data.map(p => p.value);
   
@@ -45,7 +47,5 @@ function visaTid() {
   }
   
   
-  // Uppdatera varje minut
-  setInterval(hämtaGasdataOchRita, 60000);
-  hämtaGasdataOchRita(); // Kör direkt vid start
+  
     
