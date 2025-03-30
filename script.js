@@ -44,6 +44,7 @@ function visaTid() {
       });
   }
   
+  
   // Uppdatera varje minut
   setInterval(hämtaGasdataOchRita, 60000);
   hämtaGasdataOchRita(); // Kör direkt vid start
