@@ -2,19 +2,30 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Husbil Live</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Min ESP-sida</title>
 </head>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
 
-<body>
-  <h1>🚐 Välkommen till husbilen</h1>
-  <button onclick="visaTid()">Visa tiden</button>
-  <p id="output"></p>
+  <h1>Välkommen till husbilens kontrollpanel</h1>
 
-  <script src="script.js"></script>
-  <canvas id="gasGraf" width="600" height="300"></canvas>
+  <button onclick="visaTid()"
+          style="padding: 10px 20px; font-size: 18px; margin: 10px;">
+    Visa aktuell tid
+  </button>
 
-  
+  <p id="tid"></p>
+
+  <button onclick="window.location.href='https://grafana.husbil.org/d/beh0adxj790xsd/gas-alarm?orgId=1&from=now-6h&to=now&timezone=browser&refresh=10s'"
+          style="padding: 10px 20px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+    Öppna Gaslarm Dashboard
+  </button>
+
+  <script>
+    function visaTid() {
+      const nu = new Date();
+      document.getElementById("tid").innerText = "Klockan är: " + nu.toLocaleTimeString();
+    }
+  </script>
+
 </body>
 </html>
