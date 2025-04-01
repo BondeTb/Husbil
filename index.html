@@ -3,21 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <title>Min ESP-sida</title>
+  <style>
+    .knapp {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      background-color: #007bff;
+      cursor: pointer;
+    }
+    .blogg-knapp {
+      background-color: #28a745;
+    }
+  </style>
 </head>
 <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
 
   <h1>Välkommen till husbilens kontrollpanel</h1>
 
-  <button onclick="visaTid()"
-          style="padding: 10px 20px; font-size: 18px; margin: 10px;">
-    Visa aktuell tid
-  </button>
-
+  <button onclick="visaTid()" class="knapp">Visa aktuell tid</button>
   <p id="tid"></p>
 
   <button onclick="window.location.href='https://grafana.husbil.org/d/beh0adxj790xsd/gas-alarm?orgId=1&from=now-6h&to=now&timezone=browser&refresh=10s'"
-          style="padding: 10px 20px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+          class="knapp">
     Öppna Gaslarm Dashboard
+  </button>
+
+  <button onclick="window.location.href='blogg.html'" class="knapp blogg-knapp">
+    Läs resebloggen 🚐
   </button>
 
   <script>
@@ -29,4 +44,3 @@
 
 </body>
 </html>
-
