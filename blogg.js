@@ -11,7 +11,7 @@ const inlägg = [
   }
 ];
 
-const bloggContainer = document.getElementById("bloggInnehåll");
+const bloggContainer = document.getElementById("bloggInnehåll    ");
 
 inlägg.forEach(post => {
   const article = document.createElement("article");
