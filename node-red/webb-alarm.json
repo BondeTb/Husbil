@@ -1,0 +1,88 @@
+[
+  {
+    "id": "a14f30ca6151e0a1",
+    "type": "tab",
+    "label": "Webb-ALARM",
+    "disabled": false,
+    "info": "Säker HTTP-ingång från husbil.org. Välj en befintlig MQTT-broker på MQTT-out-noden. Sätt ALARM_WEBHOOK_TOKEN som miljövariabel."
+  },
+  {
+    "id": "f36e48aa684b3710",
+    "type": "http in",
+    "z": "a14f30ca6151e0a1",
+    "name": "Cloudflare → alarm",
+    "url": "/alarm-webhook",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 160,
+    "y": 120,
+    "wires": [
+      [
+        "c4f3c47dbd3ba0cf"
+      ]
+    ]
+  },
+  {
+    "id": "c4f3c47dbd3ba0cf",
+    "type": "function",
+    "z": "a14f30ca6151e0a1",
+    "name": "Token + 30 s spärr",
+    "func": "// Kräver miljövariabeln ALARM_WEBHOOK_TOKEN i Node-RED.\n// Använd en lång, slumpmässig token. Lägg aldrig token i GitHub.\nconst headers = msg.req?.headers || {};\nconst supplied = headers[\"x-alarm-token\"];\nconst expected = env.get(\"ALARM_WEBHOOK_TOKEN\");\n\nfunction answer(code, result) {\n    return {\n        req: msg.req,\n        res: msg.res,\n        statusCode: code,\n        headers: {\n            \"Content-Type\": \"application/json; charset=utf-8\",\n            \"Cache-Control\": \"no-store\"\n        },\n        payload: JSON.stringify(result)\n    };\n}\n\nif (typeof expected !== \"string\" || expected.length < 24) {\n    node.warn(\"ALARM_WEBHOOK_TOKEN saknas eller är för kort.\");\n    return [null, answer(503, { ok: false })];\n}\n\nif (typeof supplied !== \"string\" || supplied !== expected) {\n    node.warn(\"Obehörigt anrop till alarm-webhook.\");\n    return [null, answer(403, { ok: false })];\n}\n\nconst now = Date.now();\nconst last = context.get(\"lastAlarmAt\") || 0;\nif (now - last < 30000) {\n    return [null, answer(429, { ok: false, error: \"Vänta 30 sekunder.\" })];\n}\ncontext.set(\"lastAlarmAt\", now);\n\nnode.status({ fill: \"green\", shape: \"dot\", text: \"Larmkommando skickat \" + new Date().toLocaleTimeString(\"sv-SE\") });\n\n// Sänder till din befintliga ESP32-S3 via MQTT.\n// Den andra utgången kvitterar endast att Node-RED tog emot kommandot.\nreturn [\n    { topic: \"kamera/larm\", payload: \"1\", qos: 0, retain: false },\n    answer(202, { ok: true })\n];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 400,
+    "y": 120,
+    "wires": [
+      [
+        "e94d4179e3c72d49"
+      ],
+      [
+        "a69d9792c6158d45"
+      ]
+    ]
+  },
+  {
+    "id": "e94d4179e3c72d49",
+    "type": "mqtt out",
+    "z": "a14f30ca6151e0a1",
+    "name": "ESP32-S3 ljudalarm",
+    "topic": "kamera/larm",
+    "qos": "0",
+    "retain": "false",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "",
+    "x": 675,
+    "y": 90,
+    "wires": []
+  },
+  {
+    "id": "a69d9792c6158d45",
+    "type": "http response",
+    "z": "a14f30ca6151e0a1",
+    "name": "HTTP-svar till Cloudflare",
+    "statusCode": "",
+    "headers": {},
+    "x": 680,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "3d4dbcb8dd3cf256",
+    "type": "comment",
+    "z": "a14f30ca6151e0a1",
+    "name": "VIKTIGT: Välj din befintliga MQTT-broker i utgången. Lägg ALARM_WEBHOOK_TOKEN i Node-RED:s miljö.",
+    "info": "Skicka aldrig token eller lösenkod i den publika GitHub-koden. HTTP-svar 202 betyder inte att S3 bekräftat ljuduppspelning.",
+    "x": 400,
+    "y": 40,
+    "wires": []
+  }
+]
