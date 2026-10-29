@@ -97,10 +97,14 @@
         let data = {};
         try { data = await response.json(); } catch {}
         if (!response.ok || !data.ok) {
-          throw new Error(response.status === 401 ? 'Fel kod. Försök igen.' : 'Det gick inte att skicka signalen. Försök igen senare.');
+          throw new Error(
+            response.status === 401 ? 'Fel kod. Försök igen.' :
+            response.status === 429 ? 'Ett larm har nyss skickats. Vänta 30 sekunder och försök igen.' :
+            'Det gick inte att skicka signalen. Försök igen senare.'
+          );
         }
         codeInput.value = '';
-        showMessage('Signalen har skickats till larmtjänsten.', 'success');
+        showMessage(data.person ? 'Tack ' + data.person + '! Larmsignalen är skickad.' : 'Larmsignalen är skickad.', 'success');
       } catch (error) {
         showMessage(error.message || 'Kunde inte skicka signalen.', 'error');
       } finally {
