@@ -72,5 +72,6 @@ node.log("Webb-ALARM från " + namn + " kl. " + tid);
 // till MQTT-out-noden, inte att högtalaren har bekräftat uppspelning.
 return [
     { topic: "kamera/larm", payload: "1", qos: 0, retain: false },
-    svar(202, { ok: true, person: namn })
+    svar(202, { ok: true, person: namn }),
+    { payload: namn + " – " + tid }
 ];
