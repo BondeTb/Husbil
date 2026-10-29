@@ -1,46 +1,117 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Min ESP-sida</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1424">
+  <meta name="description" content="Skicka en ljudsignal om du försöker nå oss utan att få svar.">
+  <title>ALARM – husbil.org</title>
   <style>
-    .knapp {
-      padding: 10px 20px;
-      font-size: 18px;
-      margin: 10px;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      background-color: #007bff;
-      cursor: pointer;
-    }
-    .blogg-knapp {
-      background-color: #28a745;
-    }
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { min-height: 100dvh; margin: 0; background: radial-gradient(circle at 50% 0%, #202f47 0%, #0b1424 55%); color: #fff; display: grid; place-items: center; padding: 24px; }
+    main { width: min(100%, 440px); text-align: center; }
+    .eyebrow { color: #aab7ca; font-size: .85rem; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 18px; }
+    h1 { font-size: clamp(2rem, 9vw, 3.25rem); margin: 0 0 15px; line-height: 1.1; }
+    p { color: #c4d0e2; line-height: 1.6; }
+    .panel { margin-top: 32px; padding: 22px; border: 1px solid #38465d; border-radius: 22px; background: rgba(14, 25, 43, .8); }
+    button { font: inherit; border: 0; border-radius: 15px; cursor: pointer; font-weight: 750; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #9ec5ff; outline-offset: 3px; }
+    .alarm { width: 100%; min-height: 112px; background: #ed3939; color: white; font-size: clamp(2rem, 8vw, 3rem); letter-spacing: .05em; box-shadow: 0 10px 28px #ed393944; }
+    .alarm:hover { background: #ff4848; }
+    .send { width: 100%; padding: 18px; background: #ed3939; color: white; font-size: 1.15rem; margin-top: 16px; }
+    button:disabled { opacity: .58; cursor: wait; }
+    .back { background: transparent; color: #c9d6ec; text-decoration: underline; padding: 14px; }
+    .step[hidden] { display: none; }
+    label { display: block; text-align: left; color: #e4ebf7; font-weight: 650; margin-bottom: 9px; }
+    input { width: 100%; background: #f8fafc; color: #142033; border: 2px solid transparent; border-radius: 12px; padding: 16px; font: inherit; font-size: 1.1rem; }
+    #message { min-height: 2.6em; margin: 17px 0 0; font-weight: 650; }
+    #message.error { color: #ffb3b3; }
+    #message.success { color: #a9f1bb; }
+    .note { font-size: .87rem; margin-top: 24px; color: #aebed3; }
   </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-
-  <h1>Välkommen till husbilens kontrollpanel</h1>
-
-  <button onclick="visaTid()" class="knapp">Visa aktuell tid</button>
-  <p id="tid"></p>
-
-  <button onclick="window.location.href='https://grafana.husbil.org/d/beh0adxj790xsd/gas-alarm?orgId=1&from=now-6h&to=now&timezone=browser&refresh=10s'"
-          class="knapp">
-    Öppna Gaslarm Dashboard
-  </button>
-
-  <button onclick="window.location.href='blogg.html'" class="knapp blogg-knapp">
-    Läs resebloggen 🚐
-  </button>
-
+<body>
+  <main>
+    <div class="eyebrow">husbil.org</div>
+    <h1>Behöver du nå oss?</h1>
+    <p>Om du har ringt men inte fått svar kan du skicka en ljudsignal. Använd koden du har fått av oss.</p>
+    <section class="panel" aria-label="Ljudalarm">
+      <div id="start-step" class="step">
+        <button id="alarm-button" class="alarm" type="button">🔔 ALARM</button>
+      </div>
+      <form id="code-step" class="step" hidden>
+        <label for="alarm-code">Ange din kod</label>
+        <input id="alarm-code" name="code" type="password" autocomplete="off" inputmode="text" required maxlength="128" placeholder="Din personliga kod">
+        <button id="send-button" class="send" type="submit">Skicka ljudsignal</button>
+        <button id="back-button" class="back" type="button">Tillbaka</button>
+      </form>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+    <p class="note">Endast för personer som har fått en kod. Ring 112 vid akuta nödsituationer.</p>
+  </main>
   <script>
-    function visaTid() {
-      const nu = new Date();
-      document.getElementById("tid").innerText = "Klockan är: " + nu.toLocaleTimeString();
-    }
-  </script>
+    const startStep = document.getElementById('start-step');
+    const codeStep = document.getElementById('code-step');
+    const codeInput = document.getElementById('alarm-code');
+    const message = document.getElementById('message');
+    const sendButton = document.getElementById('send-button');
 
+    function showMessage(text, type = '') {
+      message.textContent = text;
+      message.className = type;
+    }
+
+    document.getElementById('alarm-button').addEventListener('click', () => {
+      startStep.hidden = true;
+      codeStep.hidden = false;
+      showMessage('');
+      codeInput.focus();
+    });
+
+    document.getElementById('back-button').addEventListener('click', () => {
+      if (sendButton.disabled) return;
+      codeStep.reset();
+      codeStep.hidden = true;
+      startStep.hidden = false;
+      showMessage('');
+      document.getElementById('alarm-button').focus();
+    });
+
+    codeStep.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (sendButton.disabled) return;
+      const code = codeInput.value;
+      if (!code) return;
+
+      sendButton.disabled = true;
+      sendButton.textContent = 'Skickar…';
+      showMessage('');
+      try {
+        const response = await fetch('/api/alarm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+          cache: 'no-store'
+        });
+        let data = {};
+        try { data = await response.json(); } catch {}
+        if (!response.ok || !data.ok) {
+          throw new Error(
+            response.status === 401 ? 'Fel kod. Försök igen.' :
+            response.status === 429 ? 'Ett larm har nyss skickats. Vänta 30 sekunder och försök igen.' :
+            'Det gick inte att skicka signalen. Försök igen senare.'
+          );
+        }
+        codeInput.value = '';
+        showMessage(data.person ? 'Tack ' + data.person + '! Larmsignalen är skickad.' : 'Larmsignalen är skickad.', 'success');
+      } catch (error) {
+        showMessage(error.message || 'Kunde inte skicka signalen.', 'error');
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = 'Skicka ljudsignal';
+      }
+    });
+  </script>
 </body>
 </html>
